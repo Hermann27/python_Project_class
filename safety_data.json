@@ -1,0 +1,25 @@
+[  
+    {
+        "name": "VisionConfrot",
+        "Witnesses": "Bell T",
+        "Departments": "warehouse",
+        "Location_Area": "Food Area",
+        "Incident_report_date": "2023-09-12",
+        "Type_of_near_miss": "1",
+        "Description": "N/A",
+        "Safety_violated": "2",
+        "Recommendation_step": "My name is Hermann."
+    },
+    
+    {
+        "name": "Hermann DJOUMDJEU",
+        "Witnesses": "Bell T",
+        "Departments": "Production",
+        "Location_Area": "LoC",
+        "Incident_report_date": "2023-09-04",
+        "Type_of_near_miss": "2",
+        "Description": "Juste wanted some advice.",
+        "Safety_violated": "1",
+        "Recommendation_step": "Just follow me here."
+    }
+]

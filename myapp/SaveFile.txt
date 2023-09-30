@@ -1,0 +1,183 @@
+------------------------------index.html-----------------------
+
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div id="message-container">
+    {% if messages %}
+    <div class="alert alert-success" id="success-alert">
+        <div class="messages">
+            {% for message in messages %}
+            <div {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<form method="post" id="my-form">
+    <div class="mb-3">
+        {% crispy form %}
+    </div>
+</form>
+
+<script>
+    // Hide the success alert when there are no messages
+    var successAlert = document.getElementById('success-alert');
+    var messageContainer = document.getElementById('message-container');
+
+    if (messageContainer.querySelector('.messages div')) {
+        successAlert.classList.remove('d-none');
+        
+        // Automatically hide the success alert after 3 seconds (3000 milliseconds)
+        setTimeout(function() {
+            successAlert.classList.add('d-none');
+        }, 3000);  // 3000 milliseconds (3 seconds)
+    }
+</script>
+{% endblock %}
+
+
+
+--------------------models class------------------
+from datetime import datetime
+from django.urls import reverse_lazy
+from crispy_forms.helper import FormHelper
+from django.utils.translation import gettext_lazy as _
+# Create your models here.
+class MyModel(models.Model):
+    class TypeNearMiss(models.TextChoices):
+        Safety_Concern = "SC", _("Safety Concern"),
+        Safety_Idea_Suggestion="SIG", _('Safety Idea/Suggestion'),
+        Near_Miss = "NM", _('Near-Miss'),
+        Other ="OT", _('Other')
+        
+    name = models.CharField(max_length=100)
+    Witnesses = models.CharField(max_length=100)
+    Departments = models.CharField(max_length=50)
+    Location_Area = models.CharField(max_length=50)
+    Incident_report_date = models.DateField()
+    Type_of_near_miss = models.CharField(
+        max_length =20,
+        choices=TypeNearMiss.choices,
+#        default=TypeNearMiss.none,
+    )
+    Description = models.CharField(max_length=500)
+ #   Safety_violated = models.ChoiceField()
+    Recommendation_step = models.CharField(max_length=500)
+
+
+
+    -----------------------------forms class-------------
+    from datetime import datetime
+from django.urls import reverse_lazy
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Submit
+
+class UniversityForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+ #       self.helper.form_action = reverse_lazy('index')
+        self.helper.form_method = 'POST'
+        self.helper.add_input(Submit('submit', 'Register'))
+
+    Type_of_near_miss_CHOICES = (
+        (1, 'Safety Concern'),
+        (2, 'Safety Idea/Suggestion'),
+        (3, 'Near-Miss'),
+        (4, 'Other'),
+    )
+    
+    Safety_Violation_CHOICES = (
+        (1, 'No'),
+        (2, 'Yes'),
+        (3, 'N/A'),
+    )
+
+    name = forms.CharField(widget=forms.TextInput(attrs={
+        'class':'col-sm-6'
+    }),required=False,label='Report by (Please, enter your name)')
+
+    Witnesses = forms.CharField(widget=forms.TextInput(attrs={
+        'class':'col-sm-6'
+    }))
+    
+    Departments = forms.CharField(widget=forms.TextInput(attrs={
+        'class':"col-sm-6" 
+          }))
+    
+    Location_Area = forms.CharField(widget=forms.TextInput(attrs={
+        'class':'col-sm-6'
+    }),label='Building/Work Area')
+    
+    Incident_report_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date',
+                                                                          'max': datetime.now().date(), 
+                                                                          'class':"col-sm-6" 
+                                                               }))
+
+    Type_of_near_miss = forms.ChoiceField(
+        choices=Type_of_near_miss_CHOICES,
+        widget=forms.RadioSelect(),
+    )
+    Description = forms.CharField(widget=forms.Textarea(attrs={
+        'placeholder': 'If other selected, Describe the potential incident/hazard/concern and possible outcome (be detailed)',
+        'class':"col-sm-6"  
+    }))
+
+    Safety_violated = forms.ChoiceField(
+        choices=Safety_Violation_CHOICES,
+        widget=forms.RadioSelect()
+    )
+
+    Recommendation_step = forms.CharField(widget=forms.Textarea(attrs={
+        'placeholder':'steps to take to prevent a similar incident',
+        'class':"col-sm-6"  
+    }),label='Recommendations')
+
+
+    ----------------------------------------views class -----------------------
+    import json
+import os
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.core import serializers  # Import Django's serializer
+from django.contrib import messages  # Import Django's messages module
+
+from myapp.forms import UniversityForm
+# Create your views here.
+def index(request): 
+#    context = {'form': UniversityForm()}
+    if request.method == 'POST':
+        form = UniversityForm(request.POST)
+        if form.is_valid():
+            form_data = form.cleaned_data
+            # Convert date field to a string
+            form_data['Incident_report_date'] = form_data['Incident_report_date'].strftime('%Y-%m-%d')
+            
+            json_data = json.dumps(form_data, indent=4)
+
+            # Get the base directory of your Django project
+            base_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+            # Specify the path to the JSON file relative to your project's base directory
+            json_file_path = os.path.join(base_directory, 'safety_data.json')
+
+           # Write the updated data back to the JSON file
+            with open(json_file_path, 'a') as json_file:
+               json_file.write(json_data)
+            messages.success(request, "Data have been saved successfuly into our JSON file.")
+            return redirect('index')  # Redirect back to the same page
+    else:
+        form = UniversityForm()
+    return render(request, 'index.html', {'form':form})
+
+
+    =====================================================Email script =============================================
+
+
+
+
+
