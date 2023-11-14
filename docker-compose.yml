@@ -1,0 +1,25 @@
+services:
+  bk:
+    build:
+      context: ./backend
+      args:
+        - DEV=true
+    command: >
+      sh -c "python -c "import time;print('wait 10 seconds');time.sleep(10);print('backend started')" &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./backend:/app
+      - dev-web-data:/app/report
+    environment:
+      - DB_HOST=db
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASS=postgres
+      - DEBUGING=True
+      - REPORT_SPACE=/app/report
+    ports:
+      - "8000:8000"
+volumes:
+  dev-db-data:
+  dev-web-data:
